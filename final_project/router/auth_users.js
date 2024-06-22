@@ -52,9 +52,21 @@ regd_users.post("/login", (req,res) => {
 regd_users.put("/auth/review/:isbn", (req, res) => {
     let book = books[req.params.isbn];
     if(book){
-      res.send(JSON.stringify(book, null, 4));
+        let reviews = book.reviews;
+        let username = req.session.authorization['username'];
+        let review = req.body.review;
+
+        if(!review){
+            return res.status(208).send("No review data recieved.");    
+        }
+        let action = 'added';
+        if(reviews[username]){
+            action = 'updated';
+        }
+        reviews[username] = review;
+        return res.status(200).send(`Review successfully ${action}.`);
     }
-    res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
+    return res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
 });
 
 module.exports.authenticated = regd_users;

@@ -44,9 +44,9 @@ public_users.get('/',function (req, res) {
 public_users.get('/isbn/:isbn',function (req, res) {
   let book = books[req.params.isbn];
   if(book){
-    res.send(JSON.stringify(book, null, 4));
+    return res.send(JSON.stringify(book, null, 4));
   }
-  res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
+  return res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
 });
 
 // Get book details based on author
@@ -63,9 +63,9 @@ public_users.get('/title/:title',function (req, res) {
 public_users.get('/review/:isbn',function (req, res) {
   let book = books[req.params.isbn];
   if(book){
-    res.send(JSON.stringify(book.reviews, null, 4));
+    return res.send(JSON.stringify(book.reviews, null, 4));
   }
-  res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
+  return res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
 });
 
 module.exports.general = public_users;
