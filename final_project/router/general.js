@@ -4,17 +4,6 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
-// Function to filter by book detail (author, title)
-const filterBooksByDetail = (detail, value) => {
-    let results = [];  
-    for (let [isbn, book] of Object.entries(books)) {
-      if(book[detail] == value){
-        results.push(book);
-      }
-    }
-    return results;
-};
-
 public_users.post("/register", (req,res) => {
     
     const username = req.body.username;
@@ -36,27 +25,61 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
+const getAllBooks = () => {
+    return new Promise((resolve, reject) => {
+        resolve(books);
+    });
+};
 public_users.get('/',function (req, res) {
-  return res.send(JSON.stringify(books, null, 4));
+    getAllBooks().then((books)=>{ return res.send(JSON.stringify(books, null, 4))});
 });
 
+//Filter by ISBN
+const filterBooksByISBN = (isbn) => {
+    return new Promise((resolve, reject) => {
+        console.log("Promise ISBN");
+        let book = books[isbn];
+        if(book){
+            resolve(book);
+        }
+        reject(`The book with ISBN ${isbn} was not found.`);
+    });
+};
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
-  let book = books[req.params.isbn];
-  if(book){
-    return res.send(JSON.stringify(book, null, 4));
-  }
-  return res.status(404).json({message: `The book with ISBN ${req.params.isbn} was not found.`});
+    console.log(req.params.isbn);
+    filterBooksByISBN(req.params.isbn)
+    .then(
+        (filteredBooks) => {return res.send(JSON.stringify(filteredBooks, null, 4));}
+    ).catch(
+        (errorMessage) => {console.log(errorMessage);return res.status(404).json({message: errorMessage});}
+    );
 });
 
+// Function to filter by book detail (author, title)
+const filterBooksByDetail = (detail, value) => {
+    return new Promise((resolve, reject) => {
+        let results = [];  
+        for (let [isbn, book] of Object.entries(books)) {
+            if(book[detail] == value){
+                results.push(book);
+            }
+        }
+        resolve(results);
+    });
+};
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-  return res.send(JSON.stringify(filterBooksByDetail("author", req.params.author), null, 4));
+    filterBooksByDetail("author", req.params.author).then((filteredBooks) => {
+        return res.send(JSON.stringify(filteredBooks, null, 4));
+    });
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
-    return res.send(JSON.stringify(filterBooksByDetail("title", req.params.title), null, 4));
+    filterBooksByDetail("title", req.params.title).then((filteredBooks) => {
+        return res.send(JSON.stringify(filteredBooks, null, 4));
+    });
 });
 
 //  Get book review
